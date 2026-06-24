@@ -36,7 +36,7 @@ const Login = ({ setIsLoggedIn, setUserRole, setUser }) => {
       if (user.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/profile');
+        navigate('/keranjang');
       }
     } catch (error) {
       Swal.fire({
