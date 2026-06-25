@@ -104,19 +104,7 @@ const Login = ({ setIsLoggedIn, setUserRole, setUser }) => {
           </button>
         </form>
 
-        <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }}></div>
-          <span style={{ padding: '0 10px', fontSize: '12px', color: '#9ca3af' }}>atau</span>
-          <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }}></div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <button type="button" className="btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', color: '#374151', border: '2px solid rgba(209, 213, 219, 0.5)' }}>
-            <span style={{ color: '#ea4335', fontWeight: '900', fontSize: '18px' }}>G</span> Masuk dengan Google
-          </button>
-        </div>
-
-        <div style={{ marginTop: '18px', textAlign: 'center', fontSize: '13px', color: '#6b7280' }}>
+        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '13px', color: '#6b7280' }}>
           Belum punya akun?{' '}
           <button type="button" onClick={() => navigate('/register')} style={{ color: '#b45309', fontWeight: '700', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
             Daftar di sini

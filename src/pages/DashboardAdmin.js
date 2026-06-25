@@ -11,6 +11,7 @@ const DashboardAdmin = ({ setIsLoggedIn, setUserRole, setUser }) => {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
   const [expandedProductId, setExpandedProductId] = useState(null);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [activeTab, setActiveTab] = useState('products');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -157,6 +158,10 @@ const DashboardAdmin = ({ setIsLoggedIn, setUserRole, setUser }) => {
 
   const toggleProductDetails = (id) => {
     setExpandedProductId(expandedProductId === id ? null : id);
+  };
+
+  const toggleOrderDetails = (id) => {
+    setExpandedOrderId(expandedOrderId === id ? null : id);
   };
 
   const handleUpdateOrderStatus = async (orderId, status) => {
@@ -411,6 +416,12 @@ const DashboardAdmin = ({ setIsLoggedIn, setUserRole, setUser }) => {
                           {order.createdAt ? new Date(order.createdAt).toLocaleString('id-ID') : '-'}
                         </td>
                         <td style={{ padding: '15px 20px', textAlign: 'center' }}>
+                          <button
+                            onClick={() => toggleOrderDetails(order.id)}
+                            style={{ padding: '8px 16px', fontSize: '13px', fontWeight: '700', marginRight: '8px', borderRadius: '8px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', cursor: 'pointer' }}
+                          >
+                            {expandedOrderId === order.id ? 'Tutup' : 'Detail'}
+                          </button>
                           {order.status === 'pending' && (
                             <button
                               onClick={() => handleUpdateOrderStatus(order.id, 'confirmed')}
@@ -449,8 +460,9 @@ const DashboardAdmin = ({ setIsLoggedIn, setUserRole, setUser }) => {
                           )}
                         </td>
                       </tr>
-                      <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #f3f4f6' }}>
-                        <td colSpan="6" style={{ padding: '20px', fontSize: '14px', color: '#4b5563' }}>
+                      {expandedOrderId === order.id && (
+                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #f3f4f6' }}>
+                          <td colSpan="6" style={{ padding: '20px', fontSize: '14px', color: '#4b5563' }}>
                           <div style={{ marginBottom: '15px', background: 'white', padding: '15px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
                             <div style={{ fontWeight: '800', marginBottom: '8px', color: '#111827', fontSize: '15px' }}>Detail Pesanan</div>
                             <div style={{ fontSize: '13px', color: '#6b7280' }}>ID Pesanan: <span style={{ color: '#111827', fontWeight: '600' }}>#{order.id}</span></div>
@@ -474,13 +486,14 @@ const DashboardAdmin = ({ setIsLoggedIn, setUserRole, setUser }) => {
                           {order.paymentProof && (
                             <div style={{ marginTop: '15px' }}>
                               <div style={{ fontWeight: '800', marginBottom: '8px', color: '#111827', fontSize: '14px' }}>Bukti Transfer:</div>
-                              <a href={`http://localhost:5000${order.paymentProof}`} target="_blank" rel="noopener noreferrer">
-                                <img src={`http://localhost:5000${order.paymentProof}`} alt="Bukti Transfer" style={{ maxWidth: '250px', maxHeight: '250px', borderRadius: '12px', border: '2px solid #e5e7eb', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', transition: 'transform 0.2s' }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'} />
+                              <a href={`http://localhost:5000${order.paymentProof}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>
+                                Lihat Bukti Transfer
                               </a>
                             </div>
                           )}
                         </td>
                       </tr>
+                      )}
                     </React.Fragment>
                   ))
                 )}

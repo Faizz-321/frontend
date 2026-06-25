@@ -26,10 +26,51 @@ const Katalog = ({ kataKunci, tambahKeKeranjang }) => {
     fetchProducts();
   }, []);
 
+  const kamusSinonim = {
+    'black': ['hitam'],
+    'forest': ['hutan'],
+    'chocolate': ['coklat', 'cokelat'],
+    'choco': ['coklat'],
+    'cheese': ['keju'],
+    'strawberry': ['stroberi'],
+    'vanilla': ['vanila'],
+    'cake': ['kue'],
+    'red': ['merah'],
+    'velvet': ['beludru'],
+    'cookies': ['kue kering', 'kering'],
+    'bread': ['roti'],
+    'milk': ['susu'],
+    'matcha': ['teh hijau', 'hijau'],
+    'blueberry': ['bluberi'],
+    'dessert': ['makanan penutup', 'pencuci mulut', 'manisan'],
+    'box': ['kotak']
+  };
+
   const produkDifilter = produk.filter(item => {
     const cocokKategori = kategoriAktif === 'Semua Produk' || item.category === kategoriAktif;
+    
+    let teksPencarian = item.name.toLowerCase();
+    
+    // Perkaya teks pencarian item dengan sinonim (dua arah)
+    Object.entries(kamusSinonim).forEach(([eng, indoArray]) => {
+      // Inggris -> Indo
+      if (item.name.toLowerCase().includes(eng)) {
+        teksPencarian += ' ' + indoArray.join(' ');
+      }
+      // Indo -> Inggris
+      indoArray.forEach(indo => {
+        if (item.name.toLowerCase().includes(indo)) {
+          teksPencarian += ' ' + eng;
+        }
+      });
+    });
+
     const kataPencarian = kataKunci ? kataKunci.toLowerCase() : '';
-    const cocokNama = item.name.toLowerCase().includes(kataPencarian);
+    const kataKunciArray = kataPencarian.split(' ').filter(k => k.trim() !== '');
+    
+    // Cocok jika semua kata pencarian ditemukan di teksPencarian yang sudah diperkaya
+    const cocokNama = kataKunciArray.length === 0 || kataKunciArray.every(kata => teksPencarian.includes(kata));
+    
     return cocokKategori && cocokNama;
   });
 

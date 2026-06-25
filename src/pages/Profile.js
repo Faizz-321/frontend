@@ -14,6 +14,11 @@ const Profile = ({ user, setUser, setIsLoggedIn, setUserRole }) => {
   const [saving, setSaving] = useState(false);
   const [profileFile, setProfileFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
+
+  const toggleOrderDetails = (id) => {
+    setExpandedOrderId(expandedOrderId === id ? null : id);
+  };
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -71,7 +76,11 @@ const Profile = ({ user, setUser, setIsLoggedIn, setUserRole }) => {
         formData.append('profilePicture', profileFile);
       }
 
-      const response = await API.put('/auth/profile', formData);
+      const response = await API.put('/auth/profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       const updatedUser = response.data;
       localStorage.setItem('campbread_user', JSON.stringify(updatedUser));
@@ -167,7 +176,6 @@ const Profile = ({ user, setUser, setIsLoggedIn, setUserRole }) => {
                     </div>
                     <input
                       type="file"
-                      accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files[0];
                         if (file) {
@@ -226,33 +234,68 @@ const Profile = ({ user, setUser, setIsLoggedIn, setUserRole }) => {
             ) : (
               <div style={{ display: 'grid', gap: '20px' }}>
                 {orders.map((order) => (
-                  <div key={order.id} style={{ border: '1px solid #e5e7eb', borderRadius: '20px', overflow: 'hidden', background: '#fcfcfd' }}>
-                    <div style={{ background: '#f8fafc', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div key={order.id} style={{ border: '1px solid #e5e7eb', borderRadius: '20px', overflow: 'hidden', background: '#fcfcfd', transition: 'all 0.3s ease' }}>
+                    <div 
+                      onClick={() => toggleOrderDetails(order.id)}
+                      style={{ background: '#f8fafc', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', cursor: 'pointer' }}
+                    >
                       <div>
                         <div style={{ fontSize: '15px', fontWeight: '700', color: '#111827' }}>Pesanan #{order.id}</div>
                         <div style={{ marginTop: '6px', fontSize: '13px', color: '#6b7280' }}>{new Date(order.createdAt).toLocaleString('id-ID')}</div>
                       </div>
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <span className={`order-status status-${order.status}`}>
                           {order.status}
                         </span>
-                        <span style={{ padding: '8px 14px', borderRadius: '999px', background: '#f3f4f6', color: '#374151', fontSize: '13px' }}>{formatCurrency(order.totalAmount)}</span>
+                        <span style={{ padding: '8px 14px', borderRadius: '999px', background: '#f3f4f6', color: '#374151', fontSize: '13px', fontWeight: '600' }}>{formatCurrency(order.totalAmount)}</span>
+                        <span style={{ color: '#9ca3af', transform: expandedOrderId === order.id ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease', display: 'inline-block' }}>
+                          ▼
+                        </span>
                       </div>
                     </div>
-                    <div style={{ padding: '22px 24px' }}>
-                      {order.items.map((item) => (
-                        <div key={item.id} style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #e5e7eb' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
-                            <span style={{ fontWeight: '700', color: '#111827' }}>{item.productName}</span>
-                            <span style={{ color: '#6b7280', fontSize: '13px' }}>Qty {item.quantity}</span>
-                          </div>
-                          <div style={{ fontSize: '14px', color: '#4b5563' }}>
-                            Harga: {formatCurrency(item.price)}
-                            {item.note ? <span style={{ display: 'block', marginTop: '8px', color: '#374151' }}>Catatan: {item.note}</span> : null}
+                    
+                    {expandedOrderId === order.id && (
+                      <div style={{ padding: '22px 24px', borderTop: '1px solid #e5e7eb', background: '#ffffff' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#374151', fontWeight: '700' }}>Daftar Produk</h4>
+                        <div style={{ display: 'grid', gap: '12px' }}>
+                          {order.items.map((item) => (
+                            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid #f3f4f6' }}>
+                              <div>
+                                <div style={{ fontWeight: '600', color: '#111827', fontSize: '14px' }}>{item.productName}</div>
+                                {item.note && <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Catatan: {item.note}</div>}
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{formatCurrency(item.price)}</div>
+                                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Qty: {item.quantity}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #e5e7eb' }}>
+                          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#374151', fontWeight: '700' }}>Detail Tambahan</h4>
+                          {order.note && (
+                            <div style={{ marginBottom: '12px', fontSize: '13px', color: '#4b5563', background: '#f9fafb', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                              <strong>Catatan Pesanan:</strong> {order.note}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f0fdf4', padding: '12px 16px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '18px' }}>📄</span>
+                              <span style={{ fontSize: '13px', color: '#166534', fontWeight: '600' }}>Bukti Transaksi Tersimpan</span>
+                            </div>
+                            <a 
+                              href={`http://localhost:5000${order.paymentProof}`} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              style={{ padding: '8px 14px', background: '#22c55e', color: 'white', textDecoration: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(34,197,94,0.2)' }}
+                            >
+                              Lihat File
+                            </a>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

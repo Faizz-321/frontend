@@ -7,9 +7,68 @@ import '../styles/Catalog.css';
 
 const Keranjang = ({ keranjang, setKeranjang, isLoggedIn }) => {
   const [barangDipilih, setBarangDipilih] = useState([]);
-  const [orderNote, setOrderNote] = useState('');
+  const [orderNote, setOrderNote] = useState(() => sessionStorage.getItem('savedOrderNote') || '');
   const [paymentProof, setPaymentProof] = useState(null);
   const navigate = useNavigate();
+
+  // Fungsi bantuan untuk IndexedDB
+  const saveFileToDB = (file) => {
+    if (!file) return;
+    const request = indexedDB.open('CampBreadDB', 1);
+    request.onupgradeneeded = (e) => e.target.result.createObjectStore('Files');
+    request.onsuccess = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('Files')) return;
+      const tx = db.transaction('Files', 'readwrite');
+      tx.objectStore('Files').put(file, 'paymentProof');
+    };
+  };
+
+  const loadFileFromDB = (callback) => {
+    const request = indexedDB.open('CampBreadDB', 1);
+    request.onupgradeneeded = (e) => e.target.result.createObjectStore('Files');
+    request.onsuccess = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('Files')) return;
+      const tx = db.transaction('Files', 'readonly');
+      const getReq = tx.objectStore('Files').get('paymentProof');
+      getReq.onsuccess = () => {
+        if (getReq.result) callback(getReq.result);
+      };
+    };
+  };
+
+  const clearFileFromDB = () => {
+    const request = indexedDB.open('CampBreadDB', 1);
+    request.onsuccess = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('Files')) return;
+      const tx = db.transaction('Files', 'readwrite');
+      tx.objectStore('Files').delete('paymentProof');
+    };
+  };
+
+  // Memuat file bukti transfer dari IndexedDB jika ada
+  useEffect(() => {
+    loadFileFromDB((file) => {
+      setPaymentProof(file);
+    });
+  }, []);
+
+  const handleNoteChange = (e) => {
+    setOrderNote(e.target.value);
+    sessionStorage.setItem('savedOrderNote', e.target.value);
+  };
+
+  const handleProofChange = (e) => {
+    const file = e.target.files[0];
+    setPaymentProof(file);
+    if (file) {
+      saveFileToDB(file);
+    } else {
+      clearFileFromDB();
+    }
+  };
 
   // Memilih semua barang secara otomatis saat pertama kali dimuat
   useEffect(() => {
@@ -102,11 +161,14 @@ const Keranjang = ({ keranjang, setKeranjang, isLoggedIn }) => {
       setBarangDipilih([]);
       setOrderNote('');
       setPaymentProof(null);
+      
+      sessionStorage.removeItem('savedOrderNote');
+      clearFileFromDB();
 
       Swal.fire({
         icon: 'success',
-        title: 'Pesanan Berhasil',
-        text: 'Pesanan Dikonfirmasi.',
+        title: 'Pesanan Dikonfirmasi',
+        text: 'Pesanan Di Konfirmasi.',
         toast: true,
         position: 'center',
         timer: 1500,
@@ -220,7 +282,7 @@ const Keranjang = ({ keranjang, setKeranjang, isLoggedIn }) => {
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: '#374151', marginBottom: '8px' }}>Catatan Pesanan (opsional)</label>
             <textarea
               value={orderNote}
-              onChange={(e) => setOrderNote(e.target.value)}
+              onChange={handleNoteChange}
               placeholder="Masukkan catatan untuk pesanan ini..."
               className="search-input"
               style={{ width: '100%', minHeight: '100px', padding: '15px', borderRadius: '16px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
@@ -233,11 +295,16 @@ const Keranjang = ({ keranjang, setKeranjang, isLoggedIn }) => {
             </label>
             <input
               type="file"
-              accept="image/*"
-              onChange={(e) => setPaymentProof(e.target.files[0])}
+              onChange={handleProofChange}
               style={{ width: '100%', padding: '10px', fontSize: '13px', background: '#f9fafb', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.1)' }}
             />
-            <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '6px' }}>Wajib diunggah sebelum checkout.</p>
+            {paymentProof ? (
+              <p style={{ fontSize: '12px', color: '#10b981', marginTop: '6px', fontWeight: 'bold' }}>
+                File siap: {paymentProof.name}
+              </p>
+            ) : (
+              <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '6px' }}>Wajib diunggah sebelum checkout.</p>
+            )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '25px', color: '#111', fontSize: '15px', fontWeight: 'bold' }}>
